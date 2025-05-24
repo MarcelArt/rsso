@@ -2,7 +2,7 @@ use actix_web::{App, HttpServer};
 use db::surreal::SurrealDbState;
 use dotenv::dotenv;
 use dotenv_codegen::dotenv;
-use routes::user;
+use routes::{permission, user};
 
 mod handlers;
 mod models;
@@ -22,7 +22,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     HttpServer::new(move || {
         App::new()
             .app_data(app_state.clone())
-            .service(user::setup_routes()) // <- register user routes
+            .service(permission::setup_routes())
+            .service(user::setup_routes())
     })
     .bind(("0.0.0.0", port))?
     .run()
