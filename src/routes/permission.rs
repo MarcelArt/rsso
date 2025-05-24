@@ -8,4 +8,5 @@ pub fn setup_routes() -> actix_web::Scope {
         .service(permission::read)
         .service(permission::update)
         .service(permission::delete)
+        .service(permission::get_by_id)
 }

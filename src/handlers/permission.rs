@@ -31,3 +31,10 @@ pub async fn delete(data: web::Data<SurrealDbState>, id: web::Path<String>) -> R
 
     Ok(Json(permission))
 }
+
+#[get("/{id}")]
+pub async fn get_by_id(data: web::Data<SurrealDbState>, id: web::Path<String>) -> Result<Json<Option<Permission>>, Error> {
+    let permission = data.db.select((PERMISSIONS, &*id)).await?;
+
+    Ok(Json(permission))
+}
