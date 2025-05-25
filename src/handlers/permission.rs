@@ -1,6 +1,6 @@
 use actix_web::{delete, get, post, put, web::{self, Json}, HttpResponse};
 
-use crate::{models::permission::PermissionDto, repos::{self, base::IRepo}};
+use crate::{models::{permission::{Permission, PermissionDto}, response::Response}, repos::{self, base::IRepo}};
 
 #[post("/")]
 pub async fn create(repo: web::Data<repos::Combined>, input: Json<PermissionDto>) -> HttpResponse {
@@ -8,13 +8,13 @@ pub async fn create(repo: web::Data<repos::Combined>, input: Json<PermissionDto>
 
     match permission {
         Err(e) =>  {
-            return HttpResponse::InternalServerError().body(e.to_string());
+            return HttpResponse::InternalServerError().json(Response::<Permission>::failure(e.to_string()));
         },
         Ok(None) => {
-            return HttpResponse::InternalServerError().body("Failed to create permission");
+            return HttpResponse::InternalServerError().json(Response::<Permission>::failure("Failed to create permission".to_string()));
         },
         Ok(Some(permission)) => {
-            return HttpResponse::Created().json(permission);
+            return HttpResponse::Created().json(Response::<Permission>::success(Some(permission), "Permission created successfully".to_string()));
         }
     }
 }
@@ -25,10 +25,10 @@ pub async fn read(repo: web::Data<repos::Combined>) -> HttpResponse {
 
     match permissions {
         Err(e) =>  {
-            return HttpResponse::InternalServerError().body(e.to_string());
+            return HttpResponse::InternalServerError().json(Response::<Vec<Permission>>::failure(e.to_string()));
         },
         Ok(permissions) => {
-            return HttpResponse::Ok().json(permissions);
+            return HttpResponse::Ok().json(Response::<Vec<Permission>>::success(Some(permissions), "Permissions retrieved successfully".to_string()));
         }
     }
 }
@@ -39,13 +39,13 @@ pub async fn update(repo: web::Data<repos::Combined>, id: web::Path<String>, inp
 
     match permission {
         Err(e) =>  {
-            return HttpResponse::InternalServerError().body(e.to_string());
+            return HttpResponse::InternalServerError().json(Response::<Permission>::failure(e.to_string()));
         },
         Ok(None) => {
-            return HttpResponse::NotFound().finish();
+            return HttpResponse::NotFound().json(Response::<Permission>::failure("Permission not found".to_string()));
         },
         Ok(Some(permission)) => {
-            return HttpResponse::Ok().json(permission);
+            return HttpResponse::Ok().json(Response::<Permission>::success(Some(permission), "Permission updated successfully".to_string()));
         }
     }
 }
@@ -56,13 +56,13 @@ pub async fn delete(repo: web::Data<repos::Combined>, id: web::Path<String>) -> 
 
     match permission {
         Err(e) =>  {
-            return HttpResponse::InternalServerError().body(e.to_string());
+            return HttpResponse::InternalServerError().json(Response::<Permission>::failure(e.to_string()));
         },
         Ok(None) => {
-            return HttpResponse::NotFound().finish();
+            return HttpResponse::NotFound().json(Response::<Permission>::failure("Permission not found".to_string()));
         },
         Ok(Some(permission)) => {
-            return HttpResponse::Ok().json(permission);
+            return HttpResponse::Ok().json(Response::<Permission>::success(Some(permission), "Permission deleted successfully".to_string()));
         }
     }
 }
@@ -73,13 +73,13 @@ pub async fn get_by_id(repo: web::Data<repos::Combined>, id: web::Path<String>) 
 
     match permission {
         Err(e) =>  {
-            return HttpResponse::InternalServerError().body(e.to_string());
+            return HttpResponse::InternalServerError().json(Response::<Permission>::failure(e.to_string()));
         },
         Ok(None) => {
-            return HttpResponse::NotFound().finish();
+            return HttpResponse::NotFound().json(Response::<Permission>::failure("Permission not found".to_string()));
         },
         Ok(Some(permission)) => {
-            return HttpResponse::Ok().json(permission);
+            return HttpResponse::Ok().json(Response::<Permission>::success(Some(permission), "Permission retrieved successfully".to_string()));
         }
     }
 }
