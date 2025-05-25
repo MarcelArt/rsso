@@ -1,8 +1,9 @@
-use actix_web::{App, HttpServer};
+use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use db::surreal::{self};
 use dotenv::dotenv;
 use dotenv_codegen::dotenv;
 use routes::{permission, user};
+use env_logger::Env;
 
 mod handlers;
 mod models;
@@ -14,6 +15,9 @@ mod repos;
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
+    
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+    
     let port = dotenv!("PORT");
     let port = port.parse::<u16>().expect("PORT must be a number");
 
@@ -23,7 +27,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Starting server at http://localhost:8080");
     HttpServer::new(move || {
         App::new()
-            .app_data(repos.clone())
+            .app_data(Data::new(repos.clone()))
+            .wrap(Logger::default())
             .service(permission::setup_routes())
             .service(user::setup_routes())
     })
