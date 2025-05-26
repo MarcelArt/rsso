@@ -15,3 +15,21 @@ pub struct UserDto {
     pub email: String,
     pub password: String,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct LoginInput {
+    pub username: String,
+    pub password: String,
+    pub is_remember: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct LoginResponse {
+    pub access_token: String,
+    pub refresh_token: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct RefreshInput {
+    pub refresh_token: String,
+}

@@ -3274,9 +3274,11 @@ name = "rsso"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "chrono",
  "dotenv",
  "dotenv_codegen",
  "env_logger",
+ "jsonwebtoken",
  "serde",
  "surrealdb",
  "thiserror 2.0.12",

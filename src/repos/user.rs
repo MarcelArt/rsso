@@ -53,5 +53,21 @@ impl IRepo<User, UserDto> for Repo {
     async fn get_by_id(&self, id: String) -> Result<Option<User>, crate::error::Error> {
         let user = self.db.select((USERS, &id)).await?;
         Ok(user)
+    }   
+}
+
+impl Repo {
+    pub async fn login(&self, username: String, password: String) -> Result<Option<User>, crate::error::Error> {
+        let query = "
+            select * from users
+            where (username = $username or email = $username)
+            and crypto::argon2::compare(password, $password)
+        ";
+        let user = self.db.query(query)
+            .bind(("username", username))
+            .bind(("password", password))
+            .await?
+            .take(0)?;
+        Ok(user)
     }
 }

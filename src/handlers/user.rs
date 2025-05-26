@@ -1,6 +1,8 @@
 use actix_web::{get, post, web::{self, Json}, HttpResponse};
+use dotenv_codegen::dotenv;
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 
-use crate::{models::{response::Response, user::{User, UserDto}}, repos::{self, base::IRepo}};
+use crate::{models::{claims::{AccessTokenClaims, RefreshTokenClaims}, response::Response, user::{LoginInput, LoginResponse, RefreshInput, User, UserDto}}, repos::{self, base::IRepo}, utils::time::{self}};
 
 #[post("/")]
 pub async fn create(repo: web::Data<repos::Combined>, user: Json<UserDto>) -> HttpResponse {    
@@ -30,6 +32,108 @@ pub async fn read(repo: web::Data<repos::Combined>) -> HttpResponse {
         },
         Ok(us) => {
             return HttpResponse::Ok().json(Response::<Vec<User>>::success(Some(us), "Users retrieved successfully".to_string()));
+        }
+    }
+}
+
+#[post("/login")]
+pub async fn login(repo: web::Data<repos::Combined>, user: Json<LoginInput>) -> HttpResponse {
+    let user = user.0;
+    let is_remember = user.is_remember;
+    let user = repo.user.login(user.username, user.password).await;
+
+    match user {
+        Err(e) => {
+            return HttpResponse::InternalServerError().json(Response::<LoginResponse>::failure(e.to_string()));
+        },
+        Ok(None) => {
+            return HttpResponse::Unauthorized().json(Response::<LoginResponse>::failure("Invalid username or password".to_string()));
+        },
+        Ok(Some(u)) => {
+            let exp = (chrono::Utc::now().timestamp() + 5 * time::MINUTE) as usize; // 5 minutes expiration
+            let secret = dotenv!("JWT_SECRET");
+            let access_token_claims = AccessTokenClaims {
+                username: u.username.clone(),
+                user_id: u.id.to_string(),
+                exp, 
+            };
+            let refresh_token_claims = RefreshTokenClaims {
+                user_id: u.id.to_string(),
+                exp: (chrono::Utc::now().timestamp() + if is_remember { time::MONTH } else { time::DAY }) as usize,
+                is_remember,
+            };
+            let access_token = encode(&Header::default(), &access_token_claims, &EncodingKey::from_secret(secret.as_bytes()));
+            let refresh_token = encode(&Header::default(), &refresh_token_claims, &EncodingKey::from_secret(secret.as_bytes()));
+
+            match (access_token, refresh_token) {
+                (Ok(access), Ok(refresh)) => {
+                    let response = LoginResponse {
+                        access_token: access,
+                        refresh_token: refresh,
+                    };
+                    return HttpResponse::Ok().json(Response::<LoginResponse>::success(Some(response), "Login successful".to_string()));
+                },
+                (Err(e), _) | (_, Err(e)) => {
+                    return HttpResponse::InternalServerError().json(Response::<LoginResponse>::failure(e.to_string()));
+                }
+            }
+        }
+    }
+}
+
+#[post("/refresh")]
+pub async fn generate_new_token_pair(repo: web::Data<repos::Combined>, input: Json<RefreshInput>) -> HttpResponse {
+    let secret = dotenv!("JWT_SECRET");
+    let decode_res = decode::<RefreshTokenClaims>(&input.refresh_token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default());
+
+    match decode_res {
+        Ok(token_data) => {
+            let user_id = token_data.claims.user_id;
+            let id_part = user_id.split(':').last().unwrap_or_default();
+            let is_remember = token_data.claims.is_remember;
+
+            let user = repo.user.get_by_id(String::from(id_part)).await;
+
+            match user {
+                Err(e) => {
+                    return HttpResponse::InternalServerError().json(Response::<User>::failure(e.to_string()));
+                },
+                Ok(None) => {
+                    return HttpResponse::Unauthorized().json(Response::<User>::failure("Unregistered user".to_string()));
+                },
+                Ok(Some(u)) => {
+                    let exp = (chrono::Utc::now().timestamp() + 5 * time::MINUTE) as usize; // 5 minutes expiration
+                    let secret = dotenv!("JWT_SECRET");
+                    let access_token_claims = AccessTokenClaims {
+                        username: u.username.clone(),
+                        user_id: u.id.to_string(),
+                        exp, 
+                    };
+                    let refresh_token_claims = RefreshTokenClaims {
+                        user_id: u.id.to_string(),
+                        exp: (chrono::Utc::now().timestamp() + if is_remember { time::MONTH } else { time::DAY }) as usize,
+                        is_remember,
+                    };
+                    let access_token = encode(&Header::default(), &access_token_claims, &EncodingKey::from_secret(secret.as_bytes()));
+                    let refresh_token = encode(&Header::default(), &refresh_token_claims, &EncodingKey::from_secret(secret.as_bytes()));
+        
+                    match (access_token, refresh_token) {
+                        (Ok(access), Ok(refresh)) => {
+                            let response = LoginResponse {
+                                access_token: access,
+                                refresh_token: refresh,
+                            };
+                            return HttpResponse::Ok().json(Response::<LoginResponse>::success(Some(response), "New token pair generated".to_string()));
+                        },
+                        (Err(e), _) | (_, Err(e)) => {
+                            return HttpResponse::InternalServerError().json(Response::<LoginResponse>::failure(e.to_string()));
+                        }
+                    }
+                }
+            }
+        },
+        Err(e) => {
+            return HttpResponse::Unauthorized().json(Response::<LoginResponse>::failure(e.to_string()));
         }
     }
 }
