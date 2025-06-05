@@ -2,7 +2,7 @@ use actix_web::{get, post, web::{self, Json}, HttpResponse};
 use dotenv_codegen::dotenv;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 
-use crate::{models::{claims::{AccessTokenClaims, RefreshTokenClaims}, response::Response, user::{LoginInput, LoginResponse, RefreshInput, User, UserDto}}, repos::{self, base::IRepo}, utils::time::{self}};
+use crate::{models::{claims::{AccessTokenClaims, RefreshTokenClaims}, response::Response, user::{LoginInput, LoginResponse, RefreshInput, User, UserDto}}, repos::{self, base::{ICreate, IGetById, IRead}}, utils::time::{self}};
 
 #[post("/")]
 pub async fn create(repo: web::Data<repos::Combined>, user: Json<UserDto>) -> HttpResponse {    

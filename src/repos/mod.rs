@@ -1,6 +1,4 @@
 use std::sync::Arc;
-
-use base::IRepo;
 use surrealdb::{engine::remote::ws::Client, Surreal};
 
 

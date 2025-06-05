@@ -13,4 +13,4 @@ surrealdb = "2.0.4"
 thiserror = "2.0.12"
 jsonwebtoken = "9"
 chrono = "0.4.41"
-
+crud_derive = { path = "crud_derive" }

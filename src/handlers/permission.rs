@@ -1,6 +1,6 @@
 use actix_web::{delete, get, post, put, web::{self, Json}, HttpResponse};
 
-use crate::{models::{permission::{Permission, PermissionDto}, response::Response}, repos::{self, base::IRepo}};
+use crate::{models::{permission::{Permission, PermissionDto}, response::Response}, repos::{self, base::{ICreate, IDelete, IGetById, IRead, IUpdate}}};
 
 #[post("/")]
 pub async fn create(repo: web::Data<repos::Combined>, input: Json<PermissionDto>) -> HttpResponse {

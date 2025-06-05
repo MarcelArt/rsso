@@ -2,24 +2,29 @@ use std::sync::Arc;
 
 use surrealdb::{engine::remote::ws::Client, Surreal};
 
-use crate::models::user::{User, UserDto};
-
-use super::base::IRepo;
+use crate::{models::user::{User, UserDto}, repos::base::{ICreate, IRead, IUpdate, IDelete, IGetById}};
 
 const USERS: &str = "users";
 
-#[derive(Clone)]
+#[derive(Clone, IRead, IUpdate, IDelete, IGetById)]
+#[entity("User")]
+#[dto("UserDto")]
 pub struct Repo {
     db: Arc<Surreal<Client>>,
+    table_name: String,
 }
 
-impl IRepo<User, UserDto> for Repo {
-    fn new(db: Arc<Surreal<Client>>) -> Self {
+impl Repo {
+    pub fn new(db: Arc<Surreal<Client>>) -> Self {
         Self {
             db,
+            table_name: USERS.to_string(),
         }
     }
+    
+}
 
+impl ICreate<User, UserDto> for Repo {
     async fn create(&self, input: UserDto) -> Result<Option<User>, crate::error::Error> {
         let query = "
             insert into users (username, email, password)
@@ -34,26 +39,6 @@ impl IRepo<User, UserDto> for Repo {
             .take(0)?;
         Ok(user)
     }
-
-    async fn read(&self) -> Result<Vec<User>, crate::error::Error> {
-        let users = self.db.select(USERS).await?;
-        Ok(users)
-    }
-
-    async fn update(&self, id: String, input: UserDto) -> Result<Option<User>, crate::error::Error> {
-        let user = self.db.update((USERS, &id)).content(input).await?;
-        Ok(user)
-    }
-
-    async fn delete(&self, id: String) -> Result<Option<User>, crate::error::Error> {
-        let user = self.db.delete((USERS, &id)).await?;
-        Ok(user)
-    }
-
-    async fn get_by_id(&self, id: String) -> Result<Option<User>, crate::error::Error> {
-        let user = self.db.select((USERS, &id)).await?;
-        Ok(user)
-    }   
 }
 
 impl Repo {
