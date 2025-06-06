@@ -2,7 +2,7 @@ use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use db::surreal::{self};
 use dotenv::dotenv;
 use dotenv_codegen::dotenv;
-use routes::{permission, user};
+use routes::{permission, user, role};
 use env_logger::Env;
 
 mod handlers;
@@ -33,6 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .wrap(Logger::default())
             .service(permission::setup_routes())
             .service(user::setup_routes())
+            .service(role::setup_routes())
     })
     .bind(("0.0.0.0", port))?
     .run()
