@@ -3282,12 +3282,14 @@ checksum = "4e27ee8bb91ca0adcf0ecb116293afa12d393f9c2b9b9cd54d33e8078fe19839"
 name = "rsso"
 version = "0.1.0"
 dependencies = [
+ "actix-service",
  "actix-web",
  "chrono",
  "crud_derive",
  "dotenv",
  "dotenv_codegen",
  "env_logger",
+ "futures-util",
  "jsonwebtoken",
  "serde",
  "surrealdb",
