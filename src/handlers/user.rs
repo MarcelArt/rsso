@@ -1,8 +1,8 @@
-use actix_web::{get, post, web::{self, Json}, HttpResponse};
+use actix_web::{delete, get, post, put, web::{self, Json}, HttpResponse};
 use dotenv_codegen::dotenv;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 
-use crate::{models::{claims::{AccessTokenClaims, RefreshTokenClaims}, response::Response, user::{LoginInput, LoginResponse, RefreshInput, User, UserDto}}, repos::{self, base::{ICreate, IGetById, IRead}}, utils::time::{self}};
+use crate::{models::{claims::{AccessTokenClaims, RefreshTokenClaims}, response::Response, user::{LoginInput, LoginResponse, RefreshInput, User, UserDto}}, repos::{self, base::{ICreate, IDelete, IGetById, IRead, IUpdate}}, utils::time::{self}};
 
 #[post("/")]
 pub async fn create(repo: web::Data<repos::Combined>, user: Json<UserDto>) -> HttpResponse {    
@@ -32,6 +32,57 @@ pub async fn read(repo: web::Data<repos::Combined>) -> HttpResponse {
         },
         Ok(us) => {
             return HttpResponse::Ok().json(Response::<Vec<User>>::success(Some(us), "Users retrieved successfully".to_string()));
+        }
+    }
+}
+
+#[put("/{id}")]
+pub async fn update(repo: web::Data<repos::Combined>, id: web::Path<String>, input: Json<UserDto>) -> HttpResponse {
+    let user = repo.user.update(id.into_inner(), input.0).await;
+
+    match user {
+        Err(e) =>  {
+            return HttpResponse::InternalServerError().json(Response::<User>::failure(e.to_string()));
+        },
+        Ok(None) => {
+            return HttpResponse::NotFound().json(Response::<User>::failure("User not found".to_string()));
+        },
+        Ok(Some(u)) => {
+            return HttpResponse::Ok().json(Response::<User>::success(Some(u), "User updated successfully".to_string()));
+        }
+    }
+}
+
+#[delete("/{id}")]
+pub async fn delete(repo: web::Data<repos::Combined>, id: web::Path<String>) -> HttpResponse {
+    let user = repo.user.delete(id.into_inner()).await;
+
+    match user {
+        Err(e) =>  {
+            return HttpResponse::InternalServerError().json(Response::<User>::failure(e.to_string()));
+        },
+        Ok(None) => {
+            return HttpResponse::NotFound().json(Response::<User>::failure("User not found".to_string()));
+        },
+        Ok(Some(u)) => {
+            return HttpResponse::Ok().json(Response::<User>::success(Some(u), "User deleted successfully".to_string()));
+        }
+    }
+}
+
+#[get("/{id}")]
+pub async fn get_by_id(repo: web::Data<repos::Combined>, id: web::Path<String>) -> HttpResponse {
+    let user = repo.user.get_by_id(id.into_inner()).await;
+
+    match user {
+        Err(e) =>  {
+            return HttpResponse::InternalServerError().json(Response::<User>::failure(e.to_string()));
+        },
+        Ok(None) => {
+            return HttpResponse::NotFound().json(Response::<User>::failure("User not found".to_string()));
+        },
+        Ok(Some(u)) => {
+            return HttpResponse::Ok().json(Response::<User>::success(Some(u), "User retrieved successfully".to_string()));
         }
     }
 }
