@@ -4,10 +4,12 @@ use surrealdb::RecordId;
 #[derive(Serialize, Deserialize)]
 pub struct Permission {
     pub id: RecordId,
-    pub name: String,
+    pub value: String,
+    pub description: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct PermissionDto {
-    pub name: String,
+    pub value: String,
+    pub description: String,
 }
