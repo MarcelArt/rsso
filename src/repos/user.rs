@@ -63,7 +63,7 @@ impl ICreate<User, UserDto> for Repo {
         let query = "
             insert into users (username, email, password)
             values
-            ($username, $email, crypto::argon2::generate('$password'))
+            ($username, $email, crypto::argon2::generate($password))
         ";
         let user = self.db.query(query)
             .bind(("username", input.username))
@@ -78,7 +78,10 @@ impl ICreate<User, UserDto> for Repo {
 impl Repo {
     pub async fn login(&self, username: String, password: String) -> Result<Option<User>, crate::error::Error> {
         let query = "
-            select * from users
+            select 
+                *, 
+                roles.{id, value, permissions} as roles_detail 
+            from users
             where (username = $username or email = $username)
             and crypto::argon2::compare(password, $password)
         ";

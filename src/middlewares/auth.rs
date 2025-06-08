@@ -40,6 +40,15 @@ where
     let token = token.unwrap();
     let decoded_token = decode::<AccessTokenClaims>(token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default());
 
+    if let Err(e) = decoded_token {
+        let (req, _) = req.into_parts();
+        let res = HttpResponse::Unauthorized()
+            .json(Response::<()>::failure(e.to_string()))
+            .map_into_right_body(); 
+        
+        return Ok(ServiceResponse::new(req, res));
+    }
+
     println!("Decoded token: {:#?}", decoded_token);
 
     let res = next.call(req).await?.map_into_left_body();
