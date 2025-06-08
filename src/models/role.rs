@@ -7,7 +7,8 @@ use crate::models::permission::Permission;
 pub struct Role {
     pub id: RecordId,
     pub value: String,
-    pub permissions: Vec<Permission>,
+    pub permissions: Vec<RecordId>,
+    pub permissions_detail: Option<Vec<Permission>>,
 }
 
 #[derive(Serialize, Deserialize)]

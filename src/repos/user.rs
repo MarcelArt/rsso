@@ -6,7 +6,7 @@ use crate::{models::user::{User, UserDto}, repos::base::{ICreate, IRead, IUpdate
 
 const USERS: &str = "users";
 
-#[derive(Clone, IRead, IUpdate, IDelete, IGetById)]
+#[derive(Clone, IUpdate, IDelete)]
 #[entity("User")]
 #[dto("UserDto")]
 pub struct Repo {
@@ -20,6 +20,40 @@ impl Repo {
             db,
             table_name: USERS.to_string(),
         }
+    }
+    
+}
+
+impl IRead<User> for Repo {
+    async fn read(&self) -> Result<Vec<User>, crate::error::Error> {
+        let query = "
+            SELECT 
+                *, 
+                roles.{id, value, permissions} as roles_detail
+            from users
+        ";
+
+        let users = self.db.query(query).await?.take(0)?;
+        Ok(users)
+    }
+}
+
+impl IGetById<User> for Repo { 
+    async fn get_by_id(&self, id: String) -> Result<Option<User>, crate::error::Error> {
+        let id = surrealdb::RecordId::from((USERS, id));
+        let query = "
+            SELECT 
+                *, 
+                roles.{id, value, permissions} as roles_detail
+            from $id
+        ";
+
+        let user = self.db.query(query)
+            .bind(("id", id))
+            .await?
+            .take(0)?;
+
+        Ok(user)
     }
     
 }

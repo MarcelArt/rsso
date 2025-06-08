@@ -29,7 +29,7 @@ impl IRead<Role> for Repo {
         let query = "
             SELECT 
                 *, 
-                permissions.{id, name}
+                permissions.{id, value, description} as permissions_detail
             from roles
         ";
 
@@ -46,7 +46,7 @@ impl IGetById<Role> for Repo {
         let query = "
             SELECT 
                 *, 
-                permissions.{id, name}
+                permissions.{id, value, description} as permissions_detail
             from $id
         ";
 
