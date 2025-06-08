@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'rsso'",
+            "name": "Debug executable 'rsbac'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=rsso",
-                    "--package=rsso"
+                    "--bin=rsbac",
+                    "--package=rsbac"
                 ],
                 "filter": {
-                    "name": "rsso",
+                    "name": "rsbac",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'rsso'",
+            "name": "Debug unit tests in executable 'rsbac'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=rsso",
-                    "--package=rsso"
+                    "--bin=rsbac",
+                    "--package=rsbac"
                 ],
                 "filter": {
-                    "name": "rsso",
+                    "name": "rsbac",
                     "kind": "bin"
                 }
             },
